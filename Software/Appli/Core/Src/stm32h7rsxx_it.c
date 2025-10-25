@@ -55,7 +55,7 @@
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
-extern DCMIPP_HandleTypeDef phdcmipp;
+extern PCD_HandleTypeDef hpcd_USB_OTG_HS;
 /* USER CODE BEGIN EV */
 
 /* USER CODE END EV */
@@ -199,31 +199,17 @@ void SysTick_Handler(void)
 /******************************************************************************/
 
 /**
-  * @brief This function handles EXTI line13 interrupt.
+  * @brief This function handles USB OTG HS interrupt.
   */
-void EXTI13_IRQHandler(void)
+void OTG_HS_IRQHandler(void)
 {
-  /* USER CODE BEGIN EXTI13_IRQn 0 */
+  /* USER CODE BEGIN OTG_HS_IRQn 0 */
 
-  /* USER CODE END EXTI13_IRQn 0 */
-  BSP_PB_IRQHandler(BUTTON_USER);
-  /* USER CODE BEGIN EXTI13_IRQn 1 */
+  /* USER CODE END OTG_HS_IRQn 0 */
+  HAL_PCD_IRQHandler(&hpcd_USB_OTG_HS);
+  /* USER CODE BEGIN OTG_HS_IRQn 1 */
 
-  /* USER CODE END EXTI13_IRQn 1 */
-}
-
-/**
-  * @brief This function handles DCMIPP global interrupt.
-  */
-void DCMIPP_IRQHandler(void)
-{
-  /* USER CODE BEGIN DCMIPP_IRQn 0 */
-
-  /* USER CODE END DCMIPP_IRQn 0 */
-  HAL_DCMIPP_IRQHandler(&phdcmipp);
-  /* USER CODE BEGIN DCMIPP_IRQn 1 */
-
-  /* USER CODE END DCMIPP_IRQn 1 */
+  /* USER CODE END OTG_HS_IRQn 1 */
 }
 
 /* USER CODE BEGIN 1 */

@@ -83,13 +83,6 @@ RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   /* Enable the XSPIM_P2 interface */
   HAL_PWREx_EnableXSPIM2();
 
-  /* Enable USB Voltage detector */
-  if(HAL_PWREx_EnableUSBVoltageDetector() != HAL_OK)
-  {
-   /* Initialization error */
-   Error_Handler();
-  }
-
   /* The CSI is used by the compensation cells and must be enabled before enabling the
      compensation cells.
      For more details refer to RM0477 [SBS I/O compensation cell management] chapter.
@@ -136,24 +129,25 @@ void HAL_DCMIPP_MspInit(DCMIPP_HandleTypeDef* hdcmipp)
     __HAL_RCC_DCMIPP_CLK_ENABLE();
 
     __HAL_RCC_GPIOE_CLK_ENABLE();
+    __HAL_RCC_GPIOG_CLK_ENABLE();
     __HAL_RCC_GPIOD_CLK_ENABLE();
     __HAL_RCC_GPIOB_CLK_ENABLE();
     __HAL_RCC_GPIOC_CLK_ENABLE();
     __HAL_RCC_GPIOA_CLK_ENABLE();
     /**DCMIPP GPIO Configuration
     PE0     ------> DCMIPP_D2
+    PG3     ------> DCMIPP_HSYNC
     PD3     ------> DCMIPP_D5
+    PB8     ------> DCMIPP_D6
+    PC11     ------> DCMIPP_D4
     PB9     ------> DCMIPP_D7
     PE1     ------> DCMIPP_D3
-    PB7     ------> DCMIPP_VSYNC
-    PE4     ------> DCMIPP_D4
-    PC6     ------> DCMIPP_D0
-    PE5     ------> DCMIPP_D6
-    PC7     ------> DCMIPP_D1
-    PA4     ------> DCMIPP_HSYNC
-    PA6     ------> DCMIPP_PIXCLK
+    PB7     ------> DCMIPP_D1
+    PB4(NJTRST)     ------> DCMIPP_VSYNC
+    PD5     ------> DCMIPP_PIXCLK
+    PA9     ------> DCMIPP_D0
     */
-    GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_4|GPIO_PIN_5;
+    GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Alternate = GPIO_AF13_DCMIPP;
@@ -162,30 +156,51 @@ void HAL_DCMIPP_MspInit(DCMIPP_HandleTypeDef* hdcmipp)
     GPIO_InitStruct.Pin = GPIO_PIN_3;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Alternate = GPIO_AF5_DCMIPP;
+    HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
+
+    GPIO_InitStruct.Pin = GPIO_PIN_3;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Alternate = GPIO_AF13_DCMIPP;
     HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
-    GPIO_InitStruct.Pin = GPIO_PIN_9|GPIO_PIN_7;
+    GPIO_InitStruct.Pin = GPIO_PIN_8|GPIO_PIN_9;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Alternate = GPIO_AF13_DCMIPP;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-    GPIO_InitStruct.Pin = GPIO_PIN_6|GPIO_PIN_7;
+    GPIO_InitStruct.Pin = GPIO_PIN_11;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Alternate = GPIO_AF13_DCMIPP;
     HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-    GPIO_InitStruct.Pin = GPIO_PIN_4|GPIO_PIN_6;
+    GPIO_InitStruct.Pin = GPIO_PIN_7;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Alternate = GPIO_AF5_DCMIPP;
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+    GPIO_InitStruct.Pin = GPIO_PIN_4;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Alternate = GPIO_AF4_DCMIPP;
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+    GPIO_InitStruct.Pin = GPIO_PIN_5;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Alternate = GPIO_AF5_DCMIPP;
+    HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+
+    GPIO_InitStruct.Pin = GPIO_PIN_9;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Alternate = GPIO_AF13_DCMIPP;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-    /* DCMIPP interrupt Init */
-    HAL_NVIC_SetPriority(DCMIPP_IRQn, 0, 0);
-    HAL_NVIC_EnableIRQ(DCMIPP_IRQn);
     /* USER CODE BEGIN DCMIPP_MspInit 1 */
 
     /* USER CODE END DCMIPP_MspInit 1 */
@@ -212,94 +227,32 @@ void HAL_DCMIPP_MspDeInit(DCMIPP_HandleTypeDef* hdcmipp)
 
     /**DCMIPP GPIO Configuration
     PE0     ------> DCMIPP_D2
+    PG3     ------> DCMIPP_HSYNC
     PD3     ------> DCMIPP_D5
+    PB8     ------> DCMIPP_D6
+    PC11     ------> DCMIPP_D4
     PB9     ------> DCMIPP_D7
     PE1     ------> DCMIPP_D3
-    PB7     ------> DCMIPP_VSYNC
-    PE4     ------> DCMIPP_D4
-    PC6     ------> DCMIPP_D0
-    PE5     ------> DCMIPP_D6
-    PC7     ------> DCMIPP_D1
-    PA4     ------> DCMIPP_HSYNC
-    PA6     ------> DCMIPP_PIXCLK
+    PB7     ------> DCMIPP_D1
+    PB4(NJTRST)     ------> DCMIPP_VSYNC
+    PD5     ------> DCMIPP_PIXCLK
+    PA9     ------> DCMIPP_D0
     */
-    HAL_GPIO_DeInit(GPIOE, GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_4|GPIO_PIN_5);
+    HAL_GPIO_DeInit(GPIOE, GPIO_PIN_0|GPIO_PIN_1);
 
-    HAL_GPIO_DeInit(GPIOD, GPIO_PIN_3);
+    HAL_GPIO_DeInit(GPIOG, GPIO_PIN_3);
 
-    HAL_GPIO_DeInit(GPIOB, GPIO_PIN_9|GPIO_PIN_7);
+    HAL_GPIO_DeInit(GPIOD, GPIO_PIN_3|GPIO_PIN_5);
 
-    HAL_GPIO_DeInit(GPIOC, GPIO_PIN_6|GPIO_PIN_7);
+    HAL_GPIO_DeInit(GPIOB, GPIO_PIN_8|GPIO_PIN_9|GPIO_PIN_7|GPIO_PIN_4);
 
-    HAL_GPIO_DeInit(GPIOA, GPIO_PIN_4|GPIO_PIN_6);
+    HAL_GPIO_DeInit(GPIOC, GPIO_PIN_11);
 
-    /* DCMIPP interrupt DeInit */
-    HAL_NVIC_DisableIRQ(DCMIPP_IRQn);
+    HAL_GPIO_DeInit(GPIOA, GPIO_PIN_9);
+
     /* USER CODE BEGIN DCMIPP_MspDeInit 1 */
 
     /* USER CODE END DCMIPP_MspDeInit 1 */
-  }
-
-}
-
-/**
-  * @brief PCD MSP Initialization
-  * This function configures the hardware resources used in this example
-  * @param hpcd: PCD handle pointer
-  * @retval None
-  */
-void HAL_PCD_MspInit(PCD_HandleTypeDef* hpcd)
-{
-  RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
-  if(hpcd->Instance==USB_OTG_HS)
-  {
-    /* USER CODE BEGIN USB_OTG_HS_PCD_MspInit 0 */
-
-    /* USER CODE END USB_OTG_HS_PCD_MspInit 0 */
-
-  /** Initializes the peripherals clock
-  */
-    PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USBPHYC;
-    PeriphClkInit.UsbPhycClockSelection = RCC_USBPHYCCLKSOURCE_PLL3Q;
-    if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
-    {
-      Error_Handler();
-    }
-
-  /** Enable USB Voltage detector
-  */
-    HAL_PWREx_EnableUSBVoltageDetector();
-
-    /* Peripheral clock enable */
-    __HAL_RCC_USB_OTG_HS_CLK_ENABLE();
-    __HAL_RCC_USBPHYC_CLK_ENABLE();
-    /* USER CODE BEGIN USB_OTG_HS_PCD_MspInit 1 */
-
-    /* USER CODE END USB_OTG_HS_PCD_MspInit 1 */
-
-  }
-
-}
-
-/**
-  * @brief PCD MSP De-Initialization
-  * This function freeze the hardware resources used in this example
-  * @param hpcd: PCD handle pointer
-  * @retval None
-  */
-void HAL_PCD_MspDeInit(PCD_HandleTypeDef* hpcd)
-{
-  if(hpcd->Instance==USB_OTG_HS)
-  {
-    /* USER CODE BEGIN USB_OTG_HS_PCD_MspDeInit 0 */
-
-    /* USER CODE END USB_OTG_HS_PCD_MspDeInit 0 */
-    /* Peripheral clock disable */
-    __HAL_RCC_USB_OTG_HS_CLK_DISABLE();
-    __HAL_RCC_USBPHYC_CLK_DISABLE();
-    /* USER CODE BEGIN USB_OTG_HS_PCD_MspDeInit 1 */
-
-    /* USER CODE END USB_OTG_HS_PCD_MspDeInit 1 */
   }
 
 }
