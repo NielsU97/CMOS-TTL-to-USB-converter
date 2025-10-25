@@ -1,0 +1,11 @@
+../Core/Src/usbd_video.c:244:16:USBD_VIDEO_Init	2
+../Core/Src/usbd_video.c:286:16:USBD_VIDEO_DeInit	2
+../Core/Src/usbd_video.c:313:16:USBD_VIDEO_Setup	28
+../Core/Src/usbd_video.c:464:16:USBD_VIDEO_DataIn	4
+../Core/Src/usbd_video.c:518:16:USBD_VIDEO_DataOut	1
+../Core/Src/usbd_video.c:528:16:USBD_VIDEO_EP0_RxReady	2
+../Core/Src/usbd_video.c:546:17:USBD_VIDEO_GetFSCfgDesc	1
+../Core/Src/usbd_video.c:557:17:USBD_VIDEO_GetHSCfgDesc	1
+../Core/Src/usbd_video.c:568:17:USBD_VIDEO_GetDeviceQualifierDesc	1
+../Core/Src/usbd_video.c:580:9:USBD_VIDEO_RegisterInterface	2
+../Core/Src/usbd_video.c:599:9:USBD_VIDEO_SendFrame	6

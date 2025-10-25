@@ -1,0 +1,8 @@
+../Core/Src/usbd_video_if.c:87:15:VIDEO_Init_FS	2
+../Core/Src/usbd_video_if.c:122:15:VIDEO_DeInit_FS	1
+../Core/Src/usbd_video_if.c:144:15:VIDEO_Control_FS	20
+../Core/Src/usbd_video_if.c:237:15:VIDEO_PrepareFrame_FS	1
+../Core/Src/usbd_video_if.c:256:13:VIDEO_InitCameraSensor	1
+../Core/Src/usbd_video_if.c:316:13:VIDEO_ApplyCameraSettings	1
+../Core/Src/usbd_video_if.c:391:8:VIDEO_GetCameraControl	10
+../Core/Src/usbd_video_if.c:437:8:VIDEO_SetCameraControl	25
