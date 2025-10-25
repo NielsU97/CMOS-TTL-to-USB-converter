@@ -11,6 +11,7 @@
 #include "usbd_desc.h"
 #include "usbd_video.h"
 #include "usbd_video_if.h"
+#include "stm32h7rsxx_hal_pwr_ex.h"
 
 /* Private defines -----------------------------------------------------------*/
 #define CAMERA_WIDTH           400
@@ -19,13 +20,18 @@
 #define CAMERA_FRAME_SIZE      (CAMERA_WIDTH * CAMERA_HEIGHT * 2)  // YUV422 format
 
 /* Private variables ---------------------------------------------------------*/
-DCMIPP_HandleTypeDef hdcmipp;
+DCMIPP_HandleTypeDef phdcmipp;
 DMA_HandleTypeDef hdma_dcmipp;
 USBD_HandleTypeDef hUsbDeviceFS;
+SDRAM_HandleTypeDef hsdram1;
 
 /* Frame buffers - double buffering for continuous capture */
-__attribute__((section(".sdram"))) uint8_t frameBuffer1[CAMERA_FRAME_SIZE];
-__attribute__((section(".sdram"))) uint8_t frameBuffer2[CAMERA_FRAME_SIZE];
+//__attribute__((section(".sdram"))) uint8_t frameBuffer1[CAMERA_FRAME_SIZE];
+//__attribute__((section(".sdram"))) uint8_t frameBuffer2[CAMERA_FRAME_SIZE];
+
+// Split buffers across different RAM regions
+__attribute__((section(".dtcm_ram"))) uint8_t frameBuffer1[CAMERA_FRAME_SIZE/2];
+__attribute__((section(".axisram"))) uint8_t frameBuffer2[CAMERA_FRAME_SIZE/2];
 
 volatile uint8_t *activeBuffer = frameBuffer1;
 volatile uint8_t *readyBuffer = NULL;
@@ -36,6 +42,7 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
 static void MX_DCMIPP_Init(void);
+static void MX_FMC_Init(void);
 static void MX_USB_DEVICE_Init(void);
 static void MPU_Config(void);
 static void CPU_CACHE_Enable(void);
@@ -66,7 +73,7 @@ int main(void)
   MX_USB_DEVICE_Init();
 
   /* Start DCMIPP Pipe0 capture in continuous mode */
-  HAL_DCMIPP_PIPE_Start(&hdcmipp, DCMIPP_PIPE0, (uint32_t)activeBuffer, DCMIPP_MODE_CONTINUOUS);
+  HAL_DCMIPP_PIPE_Start(&phdcmipp, DCMIPP_PIPE0, (uint32_t)activeBuffer, DCMIPP_MODE_CONTINUOUS);
 
   /* Infinite loop */
   while (1)
@@ -89,32 +96,41 @@ int main(void)
   */
 static void MX_DCMIPP_Init(void)
 {
-  DCMIPP_PipeConfTypeDef pPipeConfig = {0};
+	DCMIPP_ParallelConfTypeDef ParallelConfig = {0};
+	DCMIPP_PipeConfTypeDef PipeConfig = {0};
+	phdcmipp.Instance = DCMIPP;
 
-  /* DCMIPP peripheral configuration */
-  hdcmipp.Instance = DCMIPP;
+	if (HAL_DCMIPP_Init(&phdcmipp) != HAL_OK)
+	{
+	   Error_Handler();
+	}
+	ParallelConfig.PCKPolarity = DCMIPP_PCKPOLARITY_RISING ;
+	ParallelConfig.HSPolarity = DCMIPP_HSPOLARITY_LOW ;
+	ParallelConfig.VSPolarity = DCMIPP_VSPOLARITY_HIGH ;
+	ParallelConfig.ExtendedDataMode = DCMIPP_INTERFACE_8BITS;
+	ParallelConfig.Format = DCMIPP_FORMAT_MONOCHROME_8B;
+	ParallelConfig.SwapBits = DCMIPP_SWAPBITS_DISABLE;
+	ParallelConfig.SwapCycles = DCMIPP_SWAPCYCLES_DISABLE;
+	ParallelConfig.SynchroMode = DCMIPP_SYNCHRO_HARDWARE;
 
-  if (HAL_DCMIPP_Init(&hdcmipp) != HAL_OK)
-  {
-    Error_Handler();
-  }
+	HAL_DCMIPP_PARALLEL_SetConfig(&phdcmipp, &ParallelConfig);
 
-  /* Configure DCMIPP Pipe0 for main capture */
-  pPipeConfig.FrameRate = DCMIPP_FRAME_RATE_ALL;  // Capture all frames
- // pPipeConfig.PixelFormat = DCMIPP_PIXEL_PACKER_FORMAT_YUV422_1;  // YUV422 format
- // pPipeConfig.PixelPackerFormat = DCMIPP_PIXEL_PACKER_FORMAT_YUV422_1;
- // pPipeConfig.SyncUnmask = DCMIPP_SYNC_UNMASK_ALL;
+	/* Configure DCMIPP Pipe0 for main capture */
+	PipeConfig.FrameRate = DCMIPP_FRAME_RATE_ALL;  // Capture all frames
+	//PipeConfig.PixelFormat = DCMIPP_PIXEL_PACKER_FORMAT_YUV422_1;  // YUV422 format
+	//PipeConfig.PixelPackerFormat = DCMIPP_PIXEL_PACKER_FORMAT_YUV422_1;
+	//PipeConfig.SyncUnmask = DCMIPP_SYNC_UNMASK_ALL;
 
-  if (HAL_DCMIPP_PIPE_SetConfig(&hdcmipp, DCMIPP_PIPE0, &pPipeConfig) != HAL_OK)
+  if (HAL_DCMIPP_PIPE_SetConfig(&phdcmipp, DCMIPP_PIPE0, &PipeConfig) != HAL_OK)
   {
     Error_Handler();
   }
 
   /* Set frame size */
-  if (HAL_DCMIPP_PIPE_SetFrameSize(&hdcmipp, DCMIPP_PIPE0, CAMERA_WIDTH, CAMERA_HEIGHT) != HAL_OK)
-  {
-    Error_Handler();
-  }
+  //if (HAL_DCMIPP_PIPE_SetFrameSize(&phdcmipp, DCMIPP_PIPE0, CAMERA_WIDTH, CAMERA_HEIGHT) != HAL_OK)
+  //{
+  //  Error_Handler();
+  //}
 }
 
 /**
@@ -178,6 +194,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Alternate = GPIO_AF13_DCMIPP;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : PB15 */
+  GPIO_InitStruct.Pin = GPIO_PIN_15;
+  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
   /* TODO: Add remaining data pins D1-D7 based on your camera configuration */
   /* Example for 8-bit parallel interface:
    * DCMIPP_D1 through DCMIPP_D7 need to be configured
@@ -202,6 +224,37 @@ static void MX_USB_DEVICE_Init(void)
 
   /* Start Device Process */
   USBD_Start(&hUsbDeviceFS);
+}
+
+static void MX_FMC_Init(void)
+{
+  FMC_SDRAM_TimingTypeDef SdramTiming = {0};
+
+  hsdram1.Instance = FMC_SDRAM_DEVICE;
+  /* hsdram1.Init */
+  hsdram1.Init.SDBank = FMC_SDRAM_BANK1;
+  hsdram1.Init.ColumnBitsNumber = FMC_SDRAM_COLUMN_BITS_NUM_8;
+  hsdram1.Init.RowBitsNumber = FMC_SDRAM_ROW_BITS_NUM_13;
+  hsdram1.Init.MemoryDataWidth = FMC_SDRAM_MEM_BUS_WIDTH_32;
+  hsdram1.Init.InternalBankNumber = FMC_SDRAM_INTERN_BANKS_NUM_4;
+  hsdram1.Init.CASLatency = FMC_SDRAM_CAS_LATENCY_2;
+  hsdram1.Init.WriteProtection = FMC_SDRAM_WRITE_PROTECTION_DISABLE;
+  hsdram1.Init.SDClockPeriod = FMC_SDRAM_CLOCK_PERIOD_2;
+  hsdram1.Init.ReadBurst = FMC_SDRAM_RBURST_ENABLE;
+  hsdram1.Init.ReadPipeDelay = FMC_SDRAM_RPIPE_DELAY_0;
+  /* SdramTiming */
+  SdramTiming.LoadToActiveDelay = 2;
+  SdramTiming.ExitSelfRefreshDelay = 7;
+  SdramTiming.SelfRefreshTime = 4;
+  SdramTiming.RowCycleDelay = 7;
+  SdramTiming.WriteRecoveryTime = 2;
+  SdramTiming.RPDelay = 2;
+  SdramTiming.RCDDelay = 16;
+
+  if (HAL_SDRAM_Init(&hsdram1, &SdramTiming) != HAL_OK)
+  {
+    Error_Handler( );
+  }
 }
 
 /**
@@ -314,9 +367,11 @@ void SystemClock_Config(void)
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
   RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
 
+  __HAL_RCC_FMC_CLK_ENABLE();
+
   /** Configure the main internal regulator output voltage
   */
-  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE0);
+  //__HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE0);
 
   while(!__HAL_PWR_GET_FLAG(PWR_FLAG_VOSRDY)) {}
 
