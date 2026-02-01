@@ -17,7 +17,7 @@
 #define CAMERA_WIDTH           400
 #define CAMERA_HEIGHT          400
 #define CAMERA_FPS             30
-#define CAMERA_FRAME_SIZE      (CAMERA_WIDTH * CAMERA_HEIGHT * 2)  // YUV422 format
+#define CAMERA_FRAME_SIZE      (CAMERA_WIDTH * CAMERA_HEIGHT * 2)  // MONOCHROME_8B
 
 /* Private variables ---------------------------------------------------------*/
 DCMIPP_HandleTypeDef phdcmipp;
@@ -65,6 +65,16 @@ int main(void)
 
   /* Configure the system clock */
   SystemClock_Config();
+
+  /* Turn on user LED (PB8) immediately as a boot indicator */
+  __HAL_RCC_GPIOB_CLK_ENABLE();
+  GPIO_InitTypeDef ledGpio = {0};
+  ledGpio.Pin   = GPIO_PIN_8;
+  ledGpio.Mode  = GPIO_MODE_OUTPUT_PP;
+  ledGpio.Pull  = GPIO_NOPULL;
+  ledGpio.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOB, &ledGpio);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8, GPIO_PIN_SET);
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
@@ -223,6 +233,11 @@ static void MX_USB_DEVICE_Init(void)
   /* Wait until the USB regulator is ready */
   while (!__HAL_PWR_GET_FLAG(PWR_FLAG_USB33RDY)) {}
 
+  if (USBD_Init(&hUsbDeviceFS, &CUSTOMHID_Desc, DEVICE_FS) != USBD_OK)
+   {
+     Error_Handler();
+   }
+
   /* Add Supported Class */
   USBD_RegisterClass(&hUsbDeviceFS, &USBD_VIDEO);
 
@@ -333,7 +348,7 @@ static void MPU_Config(void)
 
   /* Configure the MPU for SDRAM */
   MPU_InitStruct.Enable = MPU_REGION_ENABLE;
-  MPU_InitStruct.BaseAddress = 0x70000000;
+  MPU_InitStruct.BaseAddress = 0x24000000; //Axisram 0x24000000 sdram 0x70000000
   MPU_InitStruct.Size = MPU_REGION_SIZE_8MB;
   MPU_InitStruct.AccessPermission = MPU_REGION_FULL_ACCESS;
   MPU_InitStruct.IsBufferable = MPU_ACCESS_NOT_BUFFERABLE;
@@ -420,8 +435,9 @@ void SystemClock_Config(void)
   }
 
   /** Configure DCMIPP clock source */
-  //PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_DCMIPP;
-  //PeriphClkInit.DcmippClockSelection = RCC_DCMIPPCLKSOURCE_PLL2R;
+  //PeriphClkInit.PeriphClockSelection  = RCC_PERIPHCLK_DCMIPP | RCC_PERIPHCLK_USB;
+  //PeriphClkInit.DcmippClockSelection  = RCC_DCMIPPCLKSOURCE_PLL1R;
+  //PeriphClkInit.UsbClockSelection     = RCC_USBCLKSOURCE_HSE;   // 8 MHz; internal USB PLL scales to 48
 
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
