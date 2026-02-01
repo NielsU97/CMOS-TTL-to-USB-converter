@@ -31,16 +31,7 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
  ../../Drivers/STM32H7RSxx_HAL_Driver/Inc/stm32h7rsxx_hal_pwr_ex.h \
  ../../Drivers/STM32H7RSxx_HAL_Driver/Inc/stm32h7rsxx_hal_sdram.h \
  ../../Drivers/STM32H7RSxx_HAL_Driver/Inc/stm32h7rsxx_ll_fmc.h \
- ../../Drivers/STM32H7RSxx_HAL_Driver/Inc/stm32h7rsxx_hal_xspi.h \
- ../Core/Inc/extmem_manager.h ../Core/Inc/stm32_extmem_conf.h \
- ../../Middlewares/ST/STM32_ExtMem_Manager/stm32_extmem.h \
- ../../Middlewares/ST/STM32_ExtMem_Manager/stm32_extmem_type.h \
- ../../Middlewares/ST/STM32_ExtMem_Manager/sal/stm32_sal_xspi_type.h \
- ../../Middlewares/ST/STM32_ExtMem_Manager/nor_sfdp/stm32_sfdp_driver_type.h \
- ../../Middlewares/ST/STM32_ExtMem_Manager/boot/stm32_boot_xip.h \
- ../USB_DEVICE/App/usb_device.h \
- ../../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_def.h \
- ../USB_DEVICE/Target/usbd_conf.h
+ ../../Drivers/STM32H7RSxx_HAL_Driver/Inc/stm32h7rsxx_hal_xspi.h
 ../Core/Inc/main.h:
 ../../Drivers/STM32H7RSxx_HAL_Driver/Inc/stm32h7rsxx_hal.h:
 ../Core/Inc/stm32h7rsxx_hal_conf.h:
@@ -75,13 +66,3 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
 ../../Drivers/STM32H7RSxx_HAL_Driver/Inc/stm32h7rsxx_hal_sdram.h:
 ../../Drivers/STM32H7RSxx_HAL_Driver/Inc/stm32h7rsxx_ll_fmc.h:
 ../../Drivers/STM32H7RSxx_HAL_Driver/Inc/stm32h7rsxx_hal_xspi.h:
-../Core/Inc/extmem_manager.h:
-../Core/Inc/stm32_extmem_conf.h:
-../../Middlewares/ST/STM32_ExtMem_Manager/stm32_extmem.h:
-../../Middlewares/ST/STM32_ExtMem_Manager/stm32_extmem_type.h:
-../../Middlewares/ST/STM32_ExtMem_Manager/sal/stm32_sal_xspi_type.h:
-../../Middlewares/ST/STM32_ExtMem_Manager/nor_sfdp/stm32_sfdp_driver_type.h:
-../../Middlewares/ST/STM32_ExtMem_Manager/boot/stm32_boot_xip.h:
-../USB_DEVICE/App/usb_device.h:
-../../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_def.h:
-../USB_DEVICE/Target/usbd_conf.h:

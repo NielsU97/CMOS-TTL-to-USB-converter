@@ -71,6 +71,7 @@ int main(void)
   MX_DMA_Init();
   MX_DCMIPP_Init();
   MX_USB_DEVICE_Init();
+  MX_FMC_Init();
 
   /* Start DCMIPP Pipe0 capture in continuous mode */
   HAL_DCMIPP_PIPE_Start(&phdcmipp, DCMIPP_PIPE0, (uint32_t)activeBuffer, DCMIPP_MODE_CONTINUOUS);
@@ -215,6 +216,12 @@ static void MX_USB_DEVICE_Init(void)
 {
   /* Init Device Library */
   //USBD_Init(&hUsbDeviceFS, &FS_Desc, DEVICE_FS);
+
+  /* Enable USB power domain (VBUS detection on the STM32H7S3) */
+  HAL_PWREx_EnableUSBReg();
+
+  /* Wait until the USB regulator is ready */
+  while (!__HAL_PWR_GET_FLAG(PWR_FLAG_USB33RDY)) {}
 
   /* Add Supported Class */
   USBD_RegisterClass(&hUsbDeviceFS, &USBD_VIDEO);
