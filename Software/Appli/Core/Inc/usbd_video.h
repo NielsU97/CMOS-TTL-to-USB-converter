@@ -107,8 +107,8 @@ extern "C" {
 #define UVC_HEADER_FID                               0x01  /* Frame ID */
 
 /* Camera resolution and format */
-#define VIDEO_WIDTH                                  400
-#define VIDEO_HEIGHT                                 400
+#define VIDEO_WIDTH                                  320 //400
+#define VIDEO_HEIGHT                                 240 //400
 #define VIDEO_FRAME_SIZE                             (VIDEO_WIDTH * VIDEO_HEIGHT * 2)
 #define VIDEO_PACKET_SIZE                            512  /* Bulk transfer packet size */
 #define VIDEO_TOTAL_BUF_SIZE                         (VIDEO_FRAME_SIZE + UVC_PAYLOAD_HEADER_SIZE)

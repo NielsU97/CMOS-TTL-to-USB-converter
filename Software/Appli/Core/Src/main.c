@@ -14,8 +14,8 @@
 #include "stm32h7rsxx_hal_pwr_ex.h"
 
 /* Private defines -----------------------------------------------------------*/
-#define CAMERA_WIDTH           400
-#define CAMERA_HEIGHT          400
+#define CAMERA_WIDTH           320 //400
+#define CAMERA_HEIGHT          240 //400
 #define CAMERA_FPS             30
 #define CAMERA_FRAME_SIZE      (CAMERA_WIDTH * CAMERA_HEIGHT * 2)  // MONOCHROME_8B
 
@@ -23,15 +23,10 @@
 DCMIPP_HandleTypeDef phdcmipp;
 DMA_HandleTypeDef hdma_dcmipp;
 USBD_HandleTypeDef hUsbDeviceFS;
-SDRAM_HandleTypeDef hsdram1;
 
 /* Frame buffers - double buffering for continuous capture */
-//__attribute__((section(".sdram"))) uint8_t frameBuffer1[CAMERA_FRAME_SIZE];
-//__attribute__((section(".sdram"))) uint8_t frameBuffer2[CAMERA_FRAME_SIZE];
-
-// Split buffers across different RAM regions
-__attribute__((section(".dtcm_ram"))) uint8_t frameBuffer1[CAMERA_FRAME_SIZE/2];
-__attribute__((section(".axisram"))) uint8_t frameBuffer2[CAMERA_FRAME_SIZE/2];
+__attribute__((section(".axisram"))) uint8_t frameBuffer1[CAMERA_FRAME_SIZE];
+__attribute__((section(".axisram"))) uint8_t frameBuffer2[CAMERA_FRAME_SIZE];
 
 volatile uint8_t *activeBuffer = frameBuffer1;
 volatile uint8_t *readyBuffer = NULL;
@@ -42,7 +37,6 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
 static void MX_DCMIPP_Init(void);
-static void MX_FMC_Init(void);
 static void MX_USB_DEVICE_Init(void);
 static void MPU_Config(void);
 static void CPU_CACHE_Enable(void);
@@ -66,22 +60,11 @@ int main(void)
   /* Configure the system clock */
   SystemClock_Config();
 
-  /* Turn on user LED (PB8) immediately as a boot indicator */
-  __HAL_RCC_GPIOB_CLK_ENABLE();
-  GPIO_InitTypeDef ledGpio = {0};
-  ledGpio.Pin   = GPIO_PIN_8;
-  ledGpio.Mode  = GPIO_MODE_OUTPUT_PP;
-  ledGpio.Pull  = GPIO_NOPULL;
-  ledGpio.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOB, &ledGpio);
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8, GPIO_PIN_SET);
-
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
   MX_DCMIPP_Init();
   MX_USB_DEVICE_Init();
-  MX_FMC_Init();
 
   /* Start DCMIPP Pipe0 capture in continuous mode */
   HAL_DCMIPP_PIPE_Start(&phdcmipp, DCMIPP_PIPE0, (uint32_t)activeBuffer, DCMIPP_MODE_CONTINUOUS);
@@ -128,20 +111,12 @@ static void MX_DCMIPP_Init(void)
 
 	/* Configure DCMIPP Pipe0 for main capture */
 	PipeConfig.FrameRate = DCMIPP_FRAME_RATE_ALL;  // Capture all frames
-	//PipeConfig.PixelFormat = DCMIPP_PIXEL_PACKER_FORMAT_YUV422_1;  // YUV422 format
-	//PipeConfig.PixelPackerFormat = DCMIPP_PIXEL_PACKER_FORMAT_YUV422_1;
-	//PipeConfig.SyncUnmask = DCMIPP_SYNC_UNMASK_ALL;
 
   if (HAL_DCMIPP_PIPE_SetConfig(&phdcmipp, DCMIPP_PIPE0, &PipeConfig) != HAL_OK)
   {
     Error_Handler();
   }
 
-  /* Set frame size */
-  //if (HAL_DCMIPP_PIPE_SetFrameSize(&phdcmipp, DCMIPP_PIPE0, CAMERA_WIDTH, CAMERA_HEIGHT) != HAL_OK)
-  //{
-  //  Error_Handler();
-  //}
 }
 
 /**
@@ -210,11 +185,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-  /* TODO: Add remaining data pins D1-D7 based on your camera configuration */
-  /* Example for 8-bit parallel interface:
-   * DCMIPP_D1 through DCMIPP_D7 need to be configured
-   */
 }
 
 /**
@@ -225,7 +195,7 @@ static void MX_GPIO_Init(void)
 static void MX_USB_DEVICE_Init(void)
 {
   /* Init Device Library */
-  //USBD_Init(&hUsbDeviceFS, &FS_Desc, DEVICE_FS);
+  USBD_Init(&hUsbDeviceFS, &CUSTOMHID_Desc, DEVICE_FS);
 
   /* Enable USB power domain (VBUS detection on the STM32H7S3) */
   HAL_PWREx_EnableUSBReg();
@@ -246,37 +216,6 @@ static void MX_USB_DEVICE_Init(void)
 
   /* Start Device Process */
   USBD_Start(&hUsbDeviceFS);
-}
-
-static void MX_FMC_Init(void)
-{
-  FMC_SDRAM_TimingTypeDef SdramTiming = {0};
-
-  hsdram1.Instance = FMC_SDRAM_DEVICE;
-  /* hsdram1.Init */
-  hsdram1.Init.SDBank = FMC_SDRAM_BANK1;
-  hsdram1.Init.ColumnBitsNumber = FMC_SDRAM_COLUMN_BITS_NUM_8;
-  hsdram1.Init.RowBitsNumber = FMC_SDRAM_ROW_BITS_NUM_13;
-  hsdram1.Init.MemoryDataWidth = FMC_SDRAM_MEM_BUS_WIDTH_32;
-  hsdram1.Init.InternalBankNumber = FMC_SDRAM_INTERN_BANKS_NUM_4;
-  hsdram1.Init.CASLatency = FMC_SDRAM_CAS_LATENCY_2;
-  hsdram1.Init.WriteProtection = FMC_SDRAM_WRITE_PROTECTION_DISABLE;
-  hsdram1.Init.SDClockPeriod = FMC_SDRAM_CLOCK_PERIOD_2;
-  hsdram1.Init.ReadBurst = FMC_SDRAM_RBURST_ENABLE;
-  hsdram1.Init.ReadPipeDelay = FMC_SDRAM_RPIPE_DELAY_0;
-  /* SdramTiming */
-  SdramTiming.LoadToActiveDelay = 2;
-  SdramTiming.ExitSelfRefreshDelay = 7;
-  SdramTiming.SelfRefreshTime = 4;
-  SdramTiming.RowCycleDelay = 7;
-  SdramTiming.WriteRecoveryTime = 2;
-  SdramTiming.RPDelay = 2;
-  SdramTiming.RCDDelay = 16;
-
-  if (HAL_SDRAM_Init(&hsdram1, &SdramTiming) != HAL_OK)
-  {
-    Error_Handler( );
-  }
 }
 
 /**
@@ -332,6 +271,7 @@ void HAL_DCMIPP_VsyncEventCallback(DCMIPP_HandleTypeDef *hdcmipp)
 {
   /* VSYNC received - new frame starting */
   /* Can be used for synchronization or timing if needed */
+	(void)hdcmipp;
 }
 
 /**
@@ -349,15 +289,15 @@ static void MPU_Config(void)
   /* Configure the MPU for SDRAM */
   MPU_InitStruct.Enable = MPU_REGION_ENABLE;
   MPU_InitStruct.BaseAddress = 0x24000000; //Axisram 0x24000000 sdram 0x70000000
-  MPU_InitStruct.Size = MPU_REGION_SIZE_8MB;
+  MPU_InitStruct.Size = MPU_REGION_SIZE_512KB;
   MPU_InitStruct.AccessPermission = MPU_REGION_FULL_ACCESS;
-  MPU_InitStruct.IsBufferable = MPU_ACCESS_NOT_BUFFERABLE;
-  MPU_InitStruct.IsCacheable = MPU_ACCESS_CACHEABLE;
-  MPU_InitStruct.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
+  MPU_InitStruct.IsBufferable = MPU_ACCESS_BUFFERABLE;
+  MPU_InitStruct.IsCacheable = MPU_ACCESS_NOT_CACHEABLE;
+  MPU_InitStruct.IsShareable = MPU_ACCESS_SHAREABLE;
   MPU_InitStruct.Number = MPU_REGION_NUMBER0;
-  MPU_InitStruct.TypeExtField = MPU_TEX_LEVEL0;
+  MPU_InitStruct.TypeExtField = MPU_TEX_LEVEL1;
   MPU_InitStruct.SubRegionDisable = 0x00;
-  MPU_InitStruct.DisableExec = MPU_INSTRUCTION_ACCESS_ENABLE;
+  MPU_InitStruct.DisableExec = MPU_INSTRUCTION_ACCESS_DISABLE;
 
   HAL_MPU_ConfigRegion(&MPU_InitStruct);
 
@@ -397,37 +337,42 @@ void SystemClock_Config(void)
 
   while(!__HAL_PWR_GET_FLAG(PWR_FLAG_VOSRDY)) {}
 
-  /** Initializes the RCC Oscillators according to the specified parameters
-  * in the RCC_OscInitTypeDef structure.
-  */
+  /* Configure HSE oscillator and PLL1 */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
-  RCC_OscInitStruct.HSEState = RCC_HSE_BYPASS;
-  //RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  //RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  //RCC_OscInitStruct.PLL.PLLM = 4;
-  //RCC_OscInitStruct.PLL.PLLN = 250;
-  //RCC_OscInitStruct.PLL.PLLP = 2;
-  //RCC_OscInitStruct.PLL.PLLQ = 5;
-  //RCC_OscInitStruct.PLL.PLLR = 2;
-  //RCC_OscInitStruct.PLL.PLLRGE = RCC_PLL1VCIRANGE_1;
-  //RCC_OscInitStruct.PLL.PLLVCOSEL = RCC_PLL1VCOWIDE;
-  //RCC_OscInitStruct.PLL.PLLFRACN = 0;
+  RCC_OscInitStruct.HSEState       = RCC_HSE_BYPASS;  // HSE comes from ST-LINK
+  RCC_OscInitStruct.PLL1.PLLState  = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL1.PLLSource = RCC_PLLSOURCE_HSE;
+
+  /* PLL1 configuration for 250 MHz SYSCLK from 8 MHz HSE:
+   * VCO input frequency  = HSE / PLLM = 8 MHz / 2 = 4 MHz
+   * VCO output frequency = VCO input * PLLN = 4 MHz * 125 = 500 MHz
+   * SYSCLK (PLL1P)       = VCO / PLLP = 500 MHz / 2 = 250 MHz
+   * PLL1Q                = VCO / PLLQ = 500 MHz / 5 = 100 MHz (optional)
+   * PLL1R                = VCO / PLLR = 500 MHz / 2 = 250 MHz (for DCMIPP)
+   */
+  RCC_OscInitStruct.PLL1.PLLM         = 2;
+  RCC_OscInitStruct.PLL1.PLLN         = 125;
+  RCC_OscInitStruct.PLL1.PLLP         = 2;
+  RCC_OscInitStruct.PLL1.PLLQ         = 5;
+  RCC_OscInitStruct.PLL1.PLLR         = 2;
+  RCC_OscInitStruct.PLL1.PLLFractional = 0;
 
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
   }
 
-  /** Initializes the CPU, AHB and APB buses clocks
-  */
-  //RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-  //                            |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2
-  //                            |RCC_CLOCKTYPE_PCLK3;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
-  //RCC_ClkInitStruct.APB3CLKDivider = RCC_HCLK_DIV2;
+  /* Configure CPU and bus clocks */
+  RCC_ClkInitStruct.ClockType      = RCC_CLOCKTYPE_HCLK  | RCC_CLOCKTYPE_SYSCLK |
+                                     RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2  |
+                                     RCC_CLOCKTYPE_PCLK4 | RCC_CLOCKTYPE_PCLK5;
+  RCC_ClkInitStruct.SYSCLKSource   = RCC_SYSCLKSOURCE_PLLCLK;  // Use PLL1P
+  RCC_ClkInitStruct.SYSCLKDivider  = RCC_SYSCLK_DIV1;          // SYSCLK = 250 MHz
+  RCC_ClkInitStruct.AHBCLKDivider  = RCC_HCLK_DIV2;            // HCLK = 125 MHz
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_APB1_DIV2;            // APB1 = 62.5 MHz
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_APB2_DIV2;            // APB2 = 62.5 MHz
+  RCC_ClkInitStruct.APB4CLKDivider = RCC_APB4_DIV2;            // APB4 = 62.5 MHz
+  RCC_ClkInitStruct.APB5CLKDivider = RCC_APB5_DIV2;            // APB5 = 62.5 MHz
 
   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK)
   {
