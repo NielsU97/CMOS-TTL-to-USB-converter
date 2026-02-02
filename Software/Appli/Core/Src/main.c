@@ -194,28 +194,37 @@ static void MX_GPIO_Init(void)
   */
 static void MX_USB_DEVICE_Init(void)
 {
-  /* Init Device Library */
-  USBD_Init(&hUsbDeviceFS, &CUSTOMHID_Desc, DEVICE_FS);
-
-  /* Enable USB power domain (VBUS detection on the STM32H7S3) */
+  /* Enable USB power domain FIRST */
   HAL_PWREx_EnableUSBReg();
 
-  /* Wait until the USB regulator is ready */
+  __HAL_RCC_USB_OTG_HS_CLK_ENABLE();
+  __HAL_RCC_USB_OTG_FS_CLK_ENABLE();
+
   while (!__HAL_PWR_GET_FLAG(PWR_FLAG_USB33RDY)) {}
 
+  /* Init Device Library ONCE */
   if (USBD_Init(&hUsbDeviceFS, &CUSTOMHID_Desc, DEVICE_FS) != USBD_OK)
-   {
-     Error_Handler();
-   }
+  {
+    Error_Handler();
+  }
 
-  /* Add Supported Class */
-  USBD_RegisterClass(&hUsbDeviceFS, &USBD_VIDEO);
+  /* Register VIDEO Class */
+  if (USBD_RegisterClass(&hUsbDeviceFS, &USBD_VIDEO) != USBD_OK)
+  {
+    Error_Handler();
+  }
 
-  /* Add Interface callbacks for VIDEO Class */
-  USBD_VIDEO_RegisterInterface(&hUsbDeviceFS, &USBD_VIDEO_fops_FS);
+  /* Add Interface callbacks */
+  if (USBD_VIDEO_RegisterInterface(&hUsbDeviceFS, &USBD_VIDEO_fops_FS) != USBD_OK)
+  {
+    Error_Handler();
+  }
 
   /* Start Device Process */
-  USBD_Start(&hUsbDeviceFS);
+  if (USBD_Start(&hUsbDeviceFS) != USBD_OK)
+  {
+    Error_Handler();
+  }
 }
 
 /**
@@ -334,6 +343,7 @@ void SystemClock_Config(void)
   /** Configure the main internal regulator output voltage
   */
   //__HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE0);
+  //__HAL_RCC_PWR_CLK_ENABLE();
 
   while(!__HAL_PWR_GET_FLAG(PWR_FLAG_VOSRDY)) {}
 
