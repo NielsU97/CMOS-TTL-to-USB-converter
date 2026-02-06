@@ -31,8 +31,6 @@ Middlewares/ST/STM32_ExtMem_Manager/stm32_sfdp_driver.o: \
  ../../Drivers/STM32H7RSxx_HAL_Driver/Inc/stm32h7rsxx_hal_pcd_ex.h \
  ../../Drivers/STM32H7RSxx_HAL_Driver/Inc/stm32h7rsxx_hal_pwr.h \
  ../../Drivers/STM32H7RSxx_HAL_Driver/Inc/stm32h7rsxx_hal_pwr_ex.h \
- ../../Drivers/STM32H7RSxx_HAL_Driver/Inc/stm32h7rsxx_hal_sdram.h \
- ../../Drivers/STM32H7RSxx_HAL_Driver/Inc/stm32h7rsxx_ll_fmc.h \
  ../../Drivers/STM32H7RSxx_HAL_Driver/Inc/stm32h7rsxx_hal_xspi.h \
  ../../Middlewares/ST/STM32_ExtMem_Manager/stm32_extmem.h \
  ../../Middlewares/ST/STM32_ExtMem_Manager/stm32_extmem_type.h \
@@ -74,8 +72,6 @@ Middlewares/ST/STM32_ExtMem_Manager/stm32_sfdp_driver.o: \
 ../../Drivers/STM32H7RSxx_HAL_Driver/Inc/stm32h7rsxx_hal_pcd_ex.h:
 ../../Drivers/STM32H7RSxx_HAL_Driver/Inc/stm32h7rsxx_hal_pwr.h:
 ../../Drivers/STM32H7RSxx_HAL_Driver/Inc/stm32h7rsxx_hal_pwr_ex.h:
-../../Drivers/STM32H7RSxx_HAL_Driver/Inc/stm32h7rsxx_hal_sdram.h:
-../../Drivers/STM32H7RSxx_HAL_Driver/Inc/stm32h7rsxx_ll_fmc.h:
 ../../Drivers/STM32H7RSxx_HAL_Driver/Inc/stm32h7rsxx_hal_xspi.h:
 ../../Middlewares/ST/STM32_ExtMem_Manager/stm32_extmem.h:
 ../../Middlewares/ST/STM32_ExtMem_Manager/stm32_extmem_type.h:

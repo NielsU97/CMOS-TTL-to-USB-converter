@@ -33,8 +33,6 @@ Middlewares/ST/STM32_USB_Device_Library/usbd_ioreq.o: \
  ../../Drivers/STM32H7RSxx_HAL_Driver/Inc/stm32h7rsxx_hal_pcd_ex.h \
  ../../Drivers/STM32H7RSxx_HAL_Driver/Inc/stm32h7rsxx_hal_pwr.h \
  ../../Drivers/STM32H7RSxx_HAL_Driver/Inc/stm32h7rsxx_hal_pwr_ex.h \
- ../../Drivers/STM32H7RSxx_HAL_Driver/Inc/stm32h7rsxx_hal_sdram.h \
- ../../Drivers/STM32H7RSxx_HAL_Driver/Inc/stm32h7rsxx_ll_fmc.h \
  ../../Drivers/STM32H7RSxx_HAL_Driver/Inc/stm32h7rsxx_hal_xspi.h \
  ../../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_core.h \
  ../../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ioreq.h \
@@ -73,8 +71,6 @@ Middlewares/ST/STM32_USB_Device_Library/usbd_ioreq.o: \
 ../../Drivers/STM32H7RSxx_HAL_Driver/Inc/stm32h7rsxx_hal_pcd_ex.h:
 ../../Drivers/STM32H7RSxx_HAL_Driver/Inc/stm32h7rsxx_hal_pwr.h:
 ../../Drivers/STM32H7RSxx_HAL_Driver/Inc/stm32h7rsxx_hal_pwr_ex.h:
-../../Drivers/STM32H7RSxx_HAL_Driver/Inc/stm32h7rsxx_hal_sdram.h:
-../../Drivers/STM32H7RSxx_HAL_Driver/Inc/stm32h7rsxx_ll_fmc.h:
 ../../Drivers/STM32H7RSxx_HAL_Driver/Inc/stm32h7rsxx_hal_xspi.h:
 ../../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_core.h:
 ../../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ioreq.h:

@@ -29,8 +29,6 @@ Core/Src/system_stm32h7rsxx.o: ../Core/Src/system_stm32h7rsxx.c \
  ../../Drivers/STM32H7RSxx_HAL_Driver/Inc/stm32h7rsxx_hal_pcd_ex.h \
  ../../Drivers/STM32H7RSxx_HAL_Driver/Inc/stm32h7rsxx_hal_pwr.h \
  ../../Drivers/STM32H7RSxx_HAL_Driver/Inc/stm32h7rsxx_hal_pwr_ex.h \
- ../../Drivers/STM32H7RSxx_HAL_Driver/Inc/stm32h7rsxx_hal_sdram.h \
- ../../Drivers/STM32H7RSxx_HAL_Driver/Inc/stm32h7rsxx_ll_fmc.h \
  ../../Drivers/STM32H7RSxx_HAL_Driver/Inc/stm32h7rsxx_hal_xspi.h
 ../../Drivers/CMSIS/Device/ST/STM32H7RSxx/Include/stm32h7rsxx.h:
 ../../Drivers/CMSIS/Device/ST/STM32H7RSxx/Include/stm32h7s3xx.h:
@@ -62,6 +60,4 @@ Core/Src/system_stm32h7rsxx.o: ../Core/Src/system_stm32h7rsxx.c \
 ../../Drivers/STM32H7RSxx_HAL_Driver/Inc/stm32h7rsxx_hal_pcd_ex.h:
 ../../Drivers/STM32H7RSxx_HAL_Driver/Inc/stm32h7rsxx_hal_pwr.h:
 ../../Drivers/STM32H7RSxx_HAL_Driver/Inc/stm32h7rsxx_hal_pwr_ex.h:
-../../Drivers/STM32H7RSxx_HAL_Driver/Inc/stm32h7rsxx_hal_sdram.h:
-../../Drivers/STM32H7RSxx_HAL_Driver/Inc/stm32h7rsxx_ll_fmc.h:
 ../../Drivers/STM32H7RSxx_HAL_Driver/Inc/stm32h7rsxx_hal_xspi.h:

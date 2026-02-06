@@ -188,3 +188,4 @@ void USBD_static_free(void *p);
 
 #endif /* __USBD_CONF_H */
 
+

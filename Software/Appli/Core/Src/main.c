@@ -22,7 +22,7 @@
 /* Private variables ---------------------------------------------------------*/
 DCMIPP_HandleTypeDef phdcmipp;
 DMA_HandleTypeDef hdma_dcmipp;
-USBD_HandleTypeDef hUsbDeviceFS;
+extern USBD_HandleTypeDef hUsbDeviceFS;  // Define it here instead of extern
 
 /* Frame buffers - double buffering for continuous capture */
 __attribute__((section(".axisram"))) uint8_t frameBuffer1[CAMERA_FRAME_SIZE];
@@ -194,27 +194,19 @@ static void MX_GPIO_Init(void)
   */
 static void MX_USB_DEVICE_Init(void)
 {
-  /* Enable USB power domain FIRST */
-  HAL_PWREx_EnableUSBReg();
-
-  __HAL_RCC_USB_OTG_HS_CLK_ENABLE();
-  __HAL_RCC_USB_OTG_FS_CLK_ENABLE();
-
-  while (!__HAL_PWR_GET_FLAG(PWR_FLAG_USB33RDY)) {}
-
-  /* Init Device Library ONCE */
-  if (USBD_Init(&hUsbDeviceFS, &CUSTOMHID_Desc, DEVICE_FS) != USBD_OK)
+  /* Init Device Library - power regulator is enabled in HAL_PCD_MspInit */
+  if (USBD_Init(&hUsbDeviceFS, &VIDEO_Desc, DEVICE_FS) != USBD_OK)
   {
     Error_Handler();
   }
 
-  /* Register VIDEO Class */
+  /* Add Supported Class */
   if (USBD_RegisterClass(&hUsbDeviceFS, &USBD_VIDEO) != USBD_OK)
   {
     Error_Handler();
   }
 
-  /* Add Interface callbacks */
+  /* Add Interface callbacks for VIDEO Class */
   if (USBD_VIDEO_RegisterInterface(&hUsbDeviceFS, &USBD_VIDEO_fops_FS) != USBD_OK)
   {
     Error_Handler();
@@ -295,7 +287,7 @@ static void MPU_Config(void)
   /* Disable the MPU */
   HAL_MPU_Disable();
 
-  /* Configure the MPU for SDRAM */
+  /* Configure the MPU for AXISRAM */
   MPU_InitStruct.Enable = MPU_REGION_ENABLE;
   MPU_InitStruct.BaseAddress = 0x24000000; //Axisram 0x24000000 sdram 0x70000000
   MPU_InitStruct.Size = MPU_REGION_SIZE_512KB;
@@ -336,14 +328,12 @@ void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
-  RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
 
   __HAL_RCC_FMC_CLK_ENABLE();
 
   /** Configure the main internal regulator output voltage
   */
   //__HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE0);
-  //__HAL_RCC_PWR_CLK_ENABLE();
 
   while(!__HAL_PWR_GET_FLAG(PWR_FLAG_VOSRDY)) {}
 
@@ -385,16 +375,6 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.APB5CLKDivider = RCC_APB5_DIV2;            // APB5 = 62.5 MHz
 
   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
-  /** Configure DCMIPP clock source */
-  //PeriphClkInit.PeriphClockSelection  = RCC_PERIPHCLK_DCMIPP | RCC_PERIPHCLK_USB;
-  //PeriphClkInit.DcmippClockSelection  = RCC_DCMIPPCLKSOURCE_PLL1R;
-  //PeriphClkInit.UsbClockSelection     = RCC_USBCLKSOURCE_HSE;   // 8 MHz; internal USB PLL scales to 48
-
-  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
     Error_Handler();
   }
